@@ -4,6 +4,11 @@ use App\Http\Controllers\ProductoController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
+
+
+use App\Http\Controllers\FileUploadController;
+
+
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -27,5 +32,5 @@ Route::post('productos', [ProductoController::class, 'store']);
 Route::put('productos/{id}', [ProductoController::class, 'update']);
 Route::delete('productos/{id}', [ProductoController::class, 'destroy']);
 
-
+Route::post('/upload', [FileUploadController::class, 'upload']);
 Route::apiResource('productos', ProductoController::class);

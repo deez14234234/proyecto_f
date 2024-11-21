@@ -3,6 +3,7 @@ import '../models/producto.dart';
 import '../services/producto_service.dart';
 import 'producto_detail_page.dart';
 import 'producto_form_page.dart';
+import 'favoritos_page.dart'; // Página de Favoritos
 
 class ProductoListPage extends StatefulWidget {
   @override
@@ -12,6 +13,10 @@ class ProductoListPage extends StatefulWidget {
 class _ProductoListPageState extends State<ProductoListPage> {
   final ProductoService _service = ProductoService();
   late Future<List<Producto>> _productos;
+
+  // Lista para almacenar productos en el carrito y favoritos
+  List<Producto> carrito = [];
+  List<Producto> favoritos = [];
 
   @override
   void initState() {
@@ -42,13 +47,45 @@ class _ProductoListPageState extends State<ProductoListPage> {
     }
   }
 
+  // Agregar producto al carrito
+  void _addToCart(Producto producto) {
+    setState(() {
+      carrito.add(producto);
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('${producto.nombre} agregado al carrito')),
+    );
+  }
+
+  // Marcar producto como favorito
+  void _addToFavorites(Producto producto) {
+    setState(() {
+      favoritos.add(producto);
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('${producto.nombre} agregado a favoritos')),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text('Lista de Productos'),
         centerTitle: true,
-        backgroundColor: Colors.teal, // Color personalizado para el AppBar
+        backgroundColor: Colors.teal,
+        actions: [
+          // Botón para ver los favoritos
+          IconButton(
+            icon: Icon(Icons.favorite),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => FavoritosPage(favoritos: favoritos)),
+              );
+            },
+          ),
+        ],
       ),
       body: FutureBuilder<List<Producto>>(
         future: _productos,
@@ -91,35 +128,48 @@ class _ProductoListPageState extends State<ProductoListPage> {
                       style: TextStyle(color: Colors.green),
                     ),
                     leading: Icon(Icons.shopping_cart, color: Colors.teal),
-                    trailing: IconButton(
-                      icon: Icon(Icons.delete, color: Colors.red),
-                      onPressed: () async {
-                        // Confirmación para eliminar el producto
-                        final confirm = await showDialog(
-                          context: context,
-                          builder: (context) => AlertDialog(
-                            title: Text('Confirmar eliminación'),
-                            content: Text('¿Estás seguro de que deseas eliminar este producto?'),
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.pop(context, false),
-                                child: Text('Cancelar'),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // Icono para eliminar producto
+                        IconButton(
+                          icon: Icon(Icons.delete, color: Colors.red),
+                          onPressed: () async {
+                            final confirm = await showDialog(
+                              context: context,
+                              builder: (context) => AlertDialog(
+                                title: Text('Confirmar eliminación'),
+                                content: Text('¿Estás seguro de que deseas eliminar este producto?'),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(context, false),
+                                    child: Text('Cancelar'),
+                                  ),
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(context, true),
+                                    child: Text('Eliminar'),
+                                  ),
+                                ],
                               ),
-                              TextButton(
-                                onPressed: () => Navigator.pop(context, true),
-                                child: Text('Eliminar'),
-                              ),
-                            ],
-                          ),
-                        );
-
-                        if (confirm == true) {
-                          _deleteProducto(producto.id!); // Llamar a eliminar si se confirma
-                        }
-                      },
+                            );
+                            if (confirm == true) {
+                              _deleteProducto(producto.id!);
+                            }
+                          },
+                        ),
+                        // Icono para agregar a favoritos
+                        IconButton(
+                          icon: Icon(Icons.favorite_border, color: Colors.pink),
+                          onPressed: () => _addToFavorites(producto),
+                        ),
+                        // Icono para agregar al carrito
+                        IconButton(
+                          icon: Icon(Icons.add_shopping_cart, color: Colors.teal),
+                          onPressed: () => _addToCart(producto),
+                        ),
+                      ],
                     ),
                     onTap: () async {
-                      // Navegar a la página de detalles y esperar un resultado
                       final result = await Navigator.push(
                         context,
                         MaterialPageRoute(
@@ -127,7 +177,7 @@ class _ProductoListPageState extends State<ProductoListPage> {
                         ),
                       );
                       if (result == true) {
-                        _fetchProductos(); // Refrescar la lista si hubo una actualización
+                        _fetchProductos();
                       }
                     },
                   ),
@@ -139,13 +189,11 @@ class _ProductoListPageState extends State<ProductoListPage> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
-          // Navegar a la página de formulario y esperar el resultado
           final result = await Navigator.push(
             context,
             MaterialPageRoute(builder: (context) => ProductoFormPage()),
           );
 
-          // Refrescar la lista de productos si se creó o actualizó uno
           if (result == true) {
             _fetchProductos();
           }
