@@ -21,6 +21,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'role', // Agregado el atributo 'role' como asignable
     ];
 
     /**

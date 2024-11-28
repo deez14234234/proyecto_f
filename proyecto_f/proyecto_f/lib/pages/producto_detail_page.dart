@@ -7,6 +7,9 @@ class ProductoDetailPage extends StatelessWidget {
   final Producto producto;
   final ProductoService _service = ProductoService();
 
+  // Variable para verificar si el usuario es administrador (esto debe ser gestionado por tu sistema de autenticación)
+  bool isAdmin = true; // Establecer como true si el usuario es administrador
+
   ProductoDetailPage({required this.producto});
 
   // Método para eliminar el producto
@@ -45,60 +48,63 @@ class ProductoDetailPage extends StatelessWidget {
               style: TextStyle(fontSize: 16),
             ),
             Spacer(),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                // Botón para editar el producto
-                ElevatedButton.icon(
-                  icon: Icon(Icons.edit),
-                  label: Text('Editar'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue,
+            // Mostrar los botones solo si es administrador
+            if (isAdmin) ...[
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  // Botón para editar el producto
+                  ElevatedButton.icon(
+                    icon: Icon(Icons.edit),
+                    label: Text('Editar'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue,
+                    ),
+                    onPressed: () async {
+                      final result = await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => ProductoFormPage(producto: producto),
+                        ),
+                      );
+                      if (result == true) {
+                        Navigator.pop(context, true); // Refrescar lista si fue editado
+                      }
+                    },
                   ),
-                  onPressed: () async {
-                    final result = await Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => ProductoFormPage(producto: producto),
-                      ),
-                    );
-                    if (result == true) {
-                      Navigator.pop(context, true); // Refrescar lista si fue editado
-                    }
-                  },
-                ),
-                // Botón para eliminar el producto
-                ElevatedButton.icon(
-                  icon: Icon(Icons.delete),
-                  label: Text('Eliminar'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red,
+                  // Botón para eliminar el producto
+                  ElevatedButton.icon(
+                    icon: Icon(Icons.delete),
+                    label: Text('Eliminar'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red,
+                    ),
+                    onPressed: () async {
+                      final confirm = await showDialog(
+                        context: context,
+                        builder: (context) => AlertDialog(
+                          title: Text('Confirmar eliminación'),
+                          content: Text('¿Estás seguro de que deseas eliminar este producto?'),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(context, false),
+                              child: Text('Cancelar'),
+                            ),
+                            TextButton(
+                              onPressed: () => Navigator.pop(context, true),
+                              child: Text('Eliminar'),
+                            ),
+                          ],
+                        ),
+                      );
+                      if (confirm == true) {
+                        _deleteProducto(context);
+                      }
+                    },
                   ),
-                  onPressed: () async {
-                    final confirm = await showDialog(
-                      context: context,
-                      builder: (context) => AlertDialog(
-                        title: Text('Confirmar eliminación'),
-                        content: Text('¿Estás seguro de que deseas eliminar este producto?'),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.pop(context, false),
-                            child: Text('Cancelar'),
-                          ),
-                          TextButton(
-                            onPressed: () => Navigator.pop(context, true),
-                            child: Text('Eliminar'),
-                          ),
-                        ],
-                      ),
-                    );
-                    if (confirm == true) {
-                      _deleteProducto(context);
-                    }
-                  },
-                ),
-              ],
-            ),
+                ],
+              ),
+            ]
           ],
         ),
       ),

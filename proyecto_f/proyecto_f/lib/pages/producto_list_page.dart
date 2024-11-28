@@ -18,6 +18,9 @@ class _ProductoListPageState extends State<ProductoListPage> {
   List<Producto> carrito = [];
   List<Producto> favoritos = [];
 
+  // Variable para verificar si el usuario es admin (esto debe ser gestionado por tu sistema de autenticación)
+  bool isAdmin = false;  // Establecer como true si el usuario es administrador
+
   @override
   void initState() {
     super.initState();
@@ -131,32 +134,33 @@ class _ProductoListPageState extends State<ProductoListPage> {
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        // Icono para eliminar producto
-                        IconButton(
-                          icon: Icon(Icons.delete, color: Colors.red),
-                          onPressed: () async {
-                            final confirm = await showDialog(
-                              context: context,
-                              builder: (context) => AlertDialog(
-                                title: Text('Confirmar eliminación'),
-                                content: Text('¿Estás seguro de que deseas eliminar este producto?'),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () => Navigator.pop(context, false),
-                                    child: Text('Cancelar'),
-                                  ),
-                                  TextButton(
-                                    onPressed: () => Navigator.pop(context, true),
-                                    child: Text('Eliminar'),
-                                  ),
-                                ],
-                              ),
-                            );
-                            if (confirm == true) {
-                              _deleteProducto(producto.id!);
-                            }
-                          },
-                        ),
+                        // Icono para eliminar producto (solo si es admin)
+                        if (isAdmin)
+                          IconButton(
+                            icon: Icon(Icons.delete, color: Colors.red),
+                            onPressed: () async {
+                              final confirm = await showDialog(
+                                context: context,
+                                builder: (context) => AlertDialog(
+                                  title: Text('Confirmar eliminación'),
+                                  content: Text('¿Estás seguro de que deseas eliminar este producto?'),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () => Navigator.pop(context, false),
+                                      child: Text('Cancelar'),
+                                    ),
+                                    TextButton(
+                                      onPressed: () => Navigator.pop(context, true),
+                                      child: Text('Eliminar'),
+                                    ),
+                                  ],
+                                ),
+                              );
+                              if (confirm == true) {
+                                _deleteProducto(producto.id!);
+                              }
+                            },
+                          ),
                         // Icono para agregar a favoritos
                         IconButton(
                           icon: Icon(Icons.favorite_border, color: Colors.pink),
@@ -187,13 +191,13 @@ class _ProductoListPageState extends State<ProductoListPage> {
           }
         },
       ),
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton: isAdmin
+          ? FloatingActionButton(
         onPressed: () async {
           final result = await Navigator.push(
             context,
             MaterialPageRoute(builder: (context) => ProductoFormPage()),
           );
-
           if (result == true) {
             _fetchProductos();
           }
@@ -201,7 +205,8 @@ class _ProductoListPageState extends State<ProductoListPage> {
         child: Icon(Icons.add),
         backgroundColor: Colors.teal,
         tooltip: 'Agregar Producto',
-      ),
+      )
+          : null, // El botón de agregar solo se muestra si es admin
     );
   }
 }
